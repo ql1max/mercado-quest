@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import './index.css';
+import './clarity.css';
 
 type Word = { spanish: string; english: string; emoji: string; color: number; position: [number, number, number] };
 const words: Word[] = [
@@ -73,21 +74,23 @@ function MarketScene({ onPick, active }: { onPick: (word: Word) => void; active:
 }
 
 function App() {
-  const [round, setRound] = useState(0); const [score, setScore] = useState(0); const [streak, setStreak] = useState(0); const [started, setStarted] = useState(false); const [feedback, setFeedback] = useState('');
+  const [round, setRound] = useState(0); const [score, setScore] = useState(0); const [streak, setStreak] = useState(0); const [started, setStarted] = useState(false); const [feedback, setFeedback] = useState<{ correct: boolean; message: string } | null>(null);
   const order = useRef([...words].sort(() => Math.random() - .5)); const target = order.current[round % words.length]; const finished = round >= words.length;
   const pick = useCallback((word: Word) => {
-    if (!started || feedback || finished) return;
-    if (word.english === target.english) { setScore((s) => s + 100 + streak * 25); setStreak((s) => s + 1); setFeedback(`¡Bien! ${target.spanish} means ${target.english}.`); }
-    else { setStreak(0); setFeedback(`Not quite — ${word.spanish} means ${word.english}.`); }
+    if (!started || feedback?.correct || finished) return;
+    if (word.english === target.english) { setScore((s) => s + 100 + streak * 25); setStreak((s) => s + 1); setFeedback({ correct: true, message: `¡Muy bien! ${target.spanish} means ${target.english}.` }); }
+    else { setStreak(0); setFeedback({ correct: false, message: `${word.emoji} is ${word.english}. Look again for ${target.spanish}.` }); }
   }, [started, feedback, finished, streak, target]);
-  const next = () => { setFeedback(''); setRound((r) => r + 1); };
-  const restart = () => { order.current = [...words].sort(() => Math.random() - .5); setRound(0); setScore(0); setStreak(0); setFeedback(''); setStarted(true); };
+  const next = () => { setFeedback(null); setRound((r) => r + 1); };
+  const restart = () => { order.current = [...words].sort(() => Math.random() - .5); setRound(0); setScore(0); setStreak(0); setFeedback(null); setStarted(true); };
   return <main><header><a href="/" className="logo">Mercado <b>Quest</b></a><div className="stats"><span>Score <b>{score}</b></span><span>Streak <b>×{streak}</b></span></div></header>
-    <section className="game"><MarketScene onPick={pick} active={started && !finished}/><div className="labels" aria-hidden="true">{words.map((w) => <span key={w.english}>{w.emoji}<b>{w.english}</b></span>)}</div>
-      {!started && <div className="card start"><p className="eyebrow">A tiny language adventure</p><h1>Shop your way<br/>to better English.</h1><p>Read the Spanish mission, then select the matching object in the 3D market. Five words. One quick round.</p><button onClick={() => setStarted(true)}>Enter the market →</button></div>}
-      {started && !finished && <div className="mission"><p>Mission {round + 1} / {words.length}</p><h2>Encuentra <em>{target.spanish}</em></h2><small>Find the matching object</small></div>}
-      {feedback && <div className="card feedback"><span>{feedback.startsWith('¡') ? '✓' : '↺'}</span><h2>{feedback}</h2><button onClick={next}>Next mission →</button></div>}
+    <section className="game"><MarketScene onPick={pick} active={started && !finished}/>
+      {started && !finished && <div className="choice-bar" aria-label="Market choices">{words.map((w) => <button key={w.english} onClick={() => pick(w)} disabled={feedback?.correct}><span>{w.emoji}</span><b>{feedback?.correct && w.english === target.english ? w.english : 'Choose'}</b></button>)}</div>}
+      {!started && <div className="card start"><p className="eyebrow">A tiny language adventure · ES → EN</p><h1>Learn English<br/>at the market.</h1><ol><li><b>Read</b> the Spanish shopping mission.</li><li><b>Choose</b> the matching market item.</li><li><b>Learn</b> its English name and build a streak.</li></ol><p className="round-note">5 words · about 1 minute · no timer</p><button onClick={() => setStarted(true)}>Start first mission →</button></div>}
+      {started && !finished && <div className="mission"><div className="progress"><i style={{ width: `${((round + 1) / words.length) * 100}%` }}/></div><p>Shopping mission {round + 1} of {words.length}</p><small>Your list says</small><h2>{target.spanish}</h2><strong>Which item matches?</strong></div>}
+      {feedback?.correct && <div className="card feedback correct"><span>✓</span><p className="eyebrow">New English word</p><h2>{target.emoji} {target.english}</h2><p><b>{target.spanish}</b> means <b>{target.english}</b>.</p><button onClick={next}>{round === words.length - 1 ? 'See my results →' : 'Next mission →'}</button></div>}
+      {feedback && !feedback.correct && <div className="try-again" role="status"><span>Not quite</span><p>{feedback.message}</p><button onClick={() => setFeedback(null)}>Try again</button></div>}
       {finished && <div className="card finish"><p className="eyebrow">Market complete</p><h2>{score} points</h2><p>You matched {words.length} everyday market words. Play again to reinforce them in a new order.</p><button onClick={restart}>Play another round ↻</button></div>}
-    </section><footer><span>ES → EN</span><p>Tap an object in the stall. Labels reveal the English vocabulary.</p></footer></main>;
+    </section><footer><span>Tip</span><p>Tap a 3D object or its illustrated choice card. Wrong guesses do not end the mission.</p></footer></main>;
 }
 export default App;

@@ -1,0 +1,23 @@
+.start ol { margin: 24px auto; padding: 0; list-style: none; display: grid; gap: 10px; max-width: 360px; text-align: left; counter-reset: steps; }
+.start li { counter-increment: steps; display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: center; font-size: 13px; }
+.start li::before { content: counter(steps); width: 25px; height: 25px; display: grid; place-items: center; border: 1px solid; border-radius: 50%; font: 10px 'DM Mono'; }
+.start .round-note { margin-bottom: 17px; font: 10px 'DM Mono'; text-transform: uppercase; }
+.choice-bar { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); display: flex; gap: 8px; z-index: 2; }
+.choice-bar button { width: 96px; border: 1px solid #20352f; background: #fff8e8; padding: 9px 7px; display: grid; gap: 3px; place-items: center; cursor: pointer; box-shadow: 2px 2px 0 #20352f; }
+.choice-bar button:hover { background: #e6cf49; transform: translateY(-3px); }
+.choice-bar button:disabled { cursor: default; transform: none; }
+.choice-bar span { font-size: 24px; line-height: 1; }
+.choice-bar b { font: 9px 'DM Mono'; text-transform: uppercase; }
+.mission { padding-top: 16px; }
+.mission .progress { height: 4px; background: #d7cfbb; margin: -16px -26px 13px; overflow: hidden; }
+.mission .progress i { display: block; height: 100%; background: #db4d37; }
+.mission small { display: block; margin: 6px 0 2px; text-transform: uppercase; letter-spacing: .08em; }
+.mission h2 { color: #db4d37; font-size: 29px; }
+.mission strong { display: block; margin-top: 4px; font-size: 11px; }
+.feedback.correct p { margin-bottom: 18px; }
+.feedback.correct h2 { margin: 0 0 10px; font-size: 38px; text-transform: capitalize; }
+.try-again { position: absolute; z-index: 4; left: 50%; bottom: 105px; transform: translateX(-50%); width: min(92%, 520px); background: #20352f; color: white; padding: 13px 15px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; box-shadow: 4px 4px 0 #db4d37; }
+.try-again span { color: #f2d747; font-weight: 800; }
+.try-again p { margin: 0; font-size: 12px; }
+.try-again button { border: 0; background: #f2d747; padding: 8px 10px; font-size: 11px; font-weight: 800; cursor: pointer; }
+@media (max-width: 650px) { .choice-bar { width: calc(100% - 18px); gap: 3px; bottom: 16px; } .choice-bar button { min-width: 0; width: 20%; padding: 8px 2px; } .choice-bar span { font-size: 21px; } .choice-bar b { font-size: 7px; } .try-again { bottom: 95px; grid-template-columns: 1fr auto; } .try-again span { grid-column: 1 / -1; } .start ol { margin: 18px auto; } }
