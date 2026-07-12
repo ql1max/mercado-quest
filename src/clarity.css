@@ -44,3 +44,5 @@
 @keyframes score-pop { 50% { color: #db4d37; transform: translateY(-3px) scale(1.25); } }
 @media (prefers-reduced-motion: reduce) { .mission, .choice-bar button, .feedback.correct, .feedback.correct > span, .try-again, .score-pop { animation: none; } .choice-bar button { transition: none; } }
 @media (max-width: 650px) { .header-tools { gap: 10px; } .sound-toggle { width: 31px; height: 31px; overflow: hidden; color: transparent; padding: 0; } .sound-toggle i { color: #20352f; margin: 0; } }
+.now-playing { margin-left: auto; font: 9px 'DM Mono'; text-transform: uppercase; letter-spacing: .06em; color: #65736e; white-space: nowrap; }
+@media (max-width: 650px) { .now-playing { display: none; } }
