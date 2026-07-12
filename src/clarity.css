@@ -1,5 +1,7 @@
 .start ol { margin: 24px auto; padding: 0; list-style: none; display: grid; gap: 10px; max-width: 360px; text-align: left; counter-reset: steps; }
 .start li { counter-increment: steps; display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: center; font-size: 13px; }
+.start li span { line-height: 1.4; }
+.start li b { display: inline; margin-right: .35em; }
 .start li::before { content: counter(steps); width: 25px; height: 25px; display: grid; place-items: center; border: 1px solid; border-radius: 50%; font: 10px 'DM Mono'; }
 .start .round-note { margin-bottom: 17px; font: 10px 'DM Mono'; text-transform: uppercase; }
 .choice-bar { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); display: flex; gap: 8px; z-index: 2; }
@@ -20,7 +22,7 @@
 .try-again span { color: #f2d747; font-weight: 800; }
 .try-again p { margin: 0; font-size: 12px; }
 .try-again button { border: 0; background: #f2d747; padding: 8px 10px; font-size: 11px; font-weight: 800; cursor: pointer; }
-@media (max-width: 650px) { .choice-bar { width: calc(100% - 18px); gap: 3px; bottom: 16px; } .choice-bar button { min-width: 0; width: 20%; padding: 8px 2px; } .choice-bar span { font-size: 21px; } .choice-bar b { font-size: 7px; } .try-again { bottom: 95px; grid-template-columns: 1fr auto; } .try-again span { grid-column: 1 / -1; } .start ol { margin: 18px auto; } }
+@media (max-width: 650px) { .choice-bar { width: calc(100% - 18px); gap: 3px; bottom: 16px; } .choice-bar button { min-width: 0; width: 20%; padding: 8px 2px; } .choice-bar span { font-size: 21px; } .choice-bar b { font-size: 7px; } .try-again { bottom: 95px; grid-template-columns: 1fr auto; } .try-again span { grid-column: 1 / -1; } .start { padding: 25px 22px; } .start h1 { font-size: 36px; } .start ol { margin: 16px auto; gap: 8px; } .start li { font-size: 12px; } }
 .header-tools { display: flex; align-items: center; gap: 24px; }
 .sound-toggle { border: 1px solid #20352f; background: transparent; padding: 6px 8px; font: 9px 'DM Mono'; text-transform: uppercase; cursor: pointer; }
 .sound-toggle i { font-style: normal; margin-left: 4px; }
