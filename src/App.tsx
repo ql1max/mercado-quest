@@ -12,6 +12,21 @@ const words: Word[] = [
   { spanish: 'el pescado', english: 'fish', emoji: '🐟', color: 0x63a9c8, position: [3.2, .65, .2] },
 ];
 
+function playSound(kind: 'select' | 'wrong' | 'correct' | 'complete', muted: boolean) {
+  if (muted) return;
+  const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  const context = new AudioContextClass();
+  const notes = kind === 'wrong' ? [180, 145] : kind === 'complete' ? [392, 523, 659] : kind === 'correct' ? [440, 660] : [260];
+  notes.forEach((frequency, index) => {
+    const oscillator = context.createOscillator(); const gain = context.createGain();
+    oscillator.type = kind === 'wrong' ? 'triangle' : 'sine'; oscillator.frequency.value = frequency;
+    const start = context.currentTime + index * .09; const duration = kind === 'select' ? .07 : .16;
+    gain.gain.setValueAtTime(.0001, start); gain.gain.exponentialRampToValueAtTime(kind === 'select' ? .035 : .075, start + .012); gain.gain.exponentialRampToValueAtTime(.0001, start + duration);
+    oscillator.connect(gain).connect(context.destination); oscillator.start(start); oscillator.stop(start + duration + .02);
+  });
+  window.setTimeout(() => void context.close(), 700);
+}
+
 function MarketScene({ onPick, active }: { onPick: (word: Word) => void; active: boolean }) {
   const mount = useRef<HTMLDivElement>(null);
   const handler = useRef(onPick);
@@ -74,21 +89,21 @@ function MarketScene({ onPick, active }: { onPick: (word: Word) => void; active:
 }
 
 function App() {
-  const [round, setRound] = useState(0); const [score, setScore] = useState(0); const [streak, setStreak] = useState(0); const [started, setStarted] = useState(false); const [feedback, setFeedback] = useState<{ correct: boolean; message: string } | null>(null);
+  const [round, setRound] = useState(0); const [score, setScore] = useState(0); const [streak, setStreak] = useState(0); const [started, setStarted] = useState(false); const [feedback, setFeedback] = useState<{ correct: boolean; message: string } | null>(null); const [muted, setMuted] = useState(false);
   const order = useRef([...words].sort(() => Math.random() - .5)); const target = order.current[round % words.length]; const finished = round >= words.length;
   const pick = useCallback((word: Word) => {
     if (!started || feedback?.correct || finished) return;
-    if (word.english === target.english) { setScore((s) => s + 100 + streak * 25); setStreak((s) => s + 1); setFeedback({ correct: true, message: `¡Muy bien! ${target.spanish} means ${target.english}.` }); }
-    else { setStreak(0); setFeedback({ correct: false, message: `${word.emoji} is ${word.english}. Look again for ${target.spanish}.` }); }
-  }, [started, feedback, finished, streak, target]);
+    if (word.english === target.english) { playSound(round === words.length - 1 ? 'complete' : 'correct', muted); setScore((s) => s + 100 + streak * 25); setStreak((s) => s + 1); setFeedback({ correct: true, message: `¡Muy bien! ${target.spanish} means ${target.english}.` }); }
+    else { playSound('wrong', muted); setStreak(0); setFeedback({ correct: false, message: `${word.emoji} is ${word.english}. Look again for ${target.spanish}.` }); }
+  }, [started, feedback, finished, streak, target, muted, round]);
   const next = () => { setFeedback(null); setRound((r) => r + 1); };
   const restart = () => { order.current = [...words].sort(() => Math.random() - .5); setRound(0); setScore(0); setStreak(0); setFeedback(null); setStarted(true); };
-  return <main><header><a href="/" className="logo">Mercado <b>Quest</b></a><div className="stats"><span>Score <b>{score}</b></span><span>Streak <b>×{streak}</b></span></div></header>
+  return <main><header><a href="/" className="logo">Mercado <b>Quest</b></a><div className="header-tools"><div className="stats"><span>Score <b key={score} className="score-pop">{score}</b></span><span>Streak <b>×{streak}</b></span></div><button className="sound-toggle" onClick={() => setMuted((value) => !value)} aria-pressed={muted} aria-label={muted ? 'Turn sound on' : 'Mute sound'}>{muted ? 'Sound off' : 'Sound on'} <i>{muted ? '×' : '♪'}</i></button></div></header>
     <section className="game"><MarketScene onPick={pick} active={started && !finished}/>
-      {started && !finished && <div className="choice-bar" aria-label="Market choices">{words.map((w) => <button key={w.english} onClick={() => pick(w)} disabled={feedback?.correct}><span>{w.emoji}</span><b>{feedback?.correct && w.english === target.english ? w.english : 'Choose'}</b></button>)}</div>}
+      {started && !finished && <div className="choice-bar" aria-label="Market choices">{words.map((w, index) => <button key={w.english} style={{ '--delay': `${index * 45}ms` } as React.CSSProperties} onClick={() => { playSound('select', muted); pick(w); }} disabled={feedback?.correct}><span>{w.emoji}</span><b>{feedback?.correct && w.english === target.english ? w.english : 'Choose'}</b></button>)}</div>}
       {!started && <div className="card start"><p className="eyebrow">A tiny language adventure · ES → EN</p><h1>Learn English<br/>at the market.</h1><ol><li><b>Read</b> the Spanish shopping mission.</li><li><b>Choose</b> the matching market item.</li><li><b>Learn</b> its English name and build a streak.</li></ol><p className="round-note">5 words · about 1 minute · no timer</p><button onClick={() => setStarted(true)}>Start first mission →</button></div>}
-      {started && !finished && <div className="mission"><div className="progress"><i style={{ width: `${((round + 1) / words.length) * 100}%` }}/></div><p>Shopping mission {round + 1} of {words.length}</p><small>Your list says</small><h2>{target.spanish}</h2><strong>Which item matches?</strong></div>}
-      {feedback?.correct && <div className="card feedback correct"><span>✓</span><p className="eyebrow">New English word</p><h2>{target.emoji} {target.english}</h2><p><b>{target.spanish}</b> means <b>{target.english}</b>.</p><button onClick={next}>{round === words.length - 1 ? 'See my results →' : 'Next mission →'}</button></div>}
+      {started && !finished && <div className="mission" key={round}><div className="progress"><i style={{ width: `${((round + 1) / words.length) * 100}%` }}/></div><p>Shopping mission {round + 1} of {words.length}</p><small>Your list says</small><h2>{target.spanish}</h2><strong>Which item matches?</strong></div>}
+      {feedback?.correct && <div className="card feedback correct"><div className="sparkles" aria-hidden="true">✦ <i>●</i> ✦ <i>●</i></div><span>✓</span><p className="eyebrow">New English word</p><h2>{target.emoji} {target.english}</h2><p><b>{target.spanish}</b> means <b>{target.english}</b>.</p><button onClick={next}>{round === words.length - 1 ? 'See my results →' : 'Next mission →'}</button></div>}
       {feedback && !feedback.correct && <div className="try-again" role="status"><span>Not quite</span><p>{feedback.message}</p><button onClick={() => setFeedback(null)}>Try again</button></div>}
       {finished && <div className="card finish"><p className="eyebrow">Market complete</p><h2>{score} points</h2><p>You matched {words.length} everyday market words. Play again to reinforce them in a new order.</p><button onClick={restart}>Play another round ↻</button></div>}
     </section><footer><span>Tip</span><p>Tap a 3D object or its illustrated choice card. Wrong guesses do not end the mission.</p></footer></main>;
