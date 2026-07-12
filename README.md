@@ -1,21 +1,24 @@
 # Mercado Quest
 
-Explore a playful 3D market and learn everyday English words through quick Spanish-to-English missions.
+A tiny 3D vocabulary game for Spanish speakers learning English. Players read Spanish missions, select matching market objects, reveal the English word, and build a score and streak across quick randomized rounds.
 
 ## Stack
 
-- Vite + React + TypeScript
+- Three.js
+- React + TypeScript + Vite
 - Cloudflare Workers Static Assets
 
-## Getting started
+## Development
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Deploying to Cloudflare Workers
+## Checks and deployment
 
 ```bash
+npm run lint
+npm run build
 npm run deploy
 ```
