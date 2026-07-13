@@ -3,13 +3,33 @@ import * as THREE from 'three';
 import './index.css';
 import './clarity.css';
 
-type Word = { spanish: string; english: string; emoji: string; color: number; position: [number, number, number] };
-const words: Word[] = [
-  { spanish: 'la manzana', english: 'apple', emoji: '🍎', color: 0xe84d3d, position: [-3.2, .65, .2] },
-  { spanish: 'el pan', english: 'bread', emoji: '🥖', color: 0xdca45c, position: [-1.55, .65, -.2] },
-  { spanish: 'la leche', english: 'milk', emoji: '🥛', color: 0xf5f0dd, position: [0, .75, .25] },
-  { spanish: 'el queso', english: 'cheese', emoji: '🧀', color: 0xf0c93d, position: [1.6, .65, -.2] },
-  { spanish: 'el pescado', english: 'fish', emoji: '🐟', color: 0x63a9c8, position: [3.2, .65, .2] },
+type Shape = 'sphere' | 'loaf' | 'carton' | 'wedge' | 'fish' | 'capsule' | 'cone' | 'oval' | 'bottle' | 'cup' | 'box';
+type Word = { spanish: string; english: string; emoji: string; color: number; shape: Shape; position: [number, number, number] };
+type Level = { title: string; words: Word[] };
+
+const positions: [number, number, number][] = [[-3.2, .65, .2], [-1.55, .65, -.2], [0, .75, .25], [1.6, .65, -.2], [3.2, .65, .2]];
+const levels: Level[] = [
+  { title: 'Market basics', words: [
+    { spanish: 'la manzana', english: 'apple', emoji: '🍎', color: 0xe84d3d, shape: 'sphere', position: positions[0] },
+    { spanish: 'el pan', english: 'bread', emoji: '🥖', color: 0xdca45c, shape: 'loaf', position: positions[1] },
+    { spanish: 'la leche', english: 'milk', emoji: '🥛', color: 0xf5f0dd, shape: 'carton', position: positions[2] },
+    { spanish: 'el queso', english: 'cheese', emoji: '🧀', color: 0xf0c93d, shape: 'wedge', position: positions[3] },
+    { spanish: 'el pescado', english: 'fish', emoji: '🐟', color: 0x63a9c8, shape: 'fish', position: positions[4] },
+  ]},
+  { title: 'Fresh produce', words: [
+    { spanish: 'el plátano', english: 'banana', emoji: '🍌', color: 0xf2cf45, shape: 'capsule', position: positions[0] },
+    { spanish: 'la naranja', english: 'orange', emoji: '🍊', color: 0xf28c28, shape: 'sphere', position: positions[1] },
+    { spanish: 'la zanahoria', english: 'carrot', emoji: '🥕', color: 0xe86f2d, shape: 'cone', position: positions[2] },
+    { spanish: 'el tomate', english: 'tomato', emoji: '🍅', color: 0xd93c35, shape: 'sphere', position: positions[3] },
+    { spanish: 'la papa', english: 'potato', emoji: '🥔', color: 0xa97b50, shape: 'oval', position: positions[4] },
+  ]},
+  { title: 'Pantry picks', words: [
+    { spanish: 'el arroz', english: 'rice', emoji: '🍚', color: 0xf1ead9, shape: 'box', position: positions[0] },
+    { spanish: 'el huevo', english: 'egg', emoji: '🥚', color: 0xf3ead0, shape: 'oval', position: positions[1] },
+    { spanish: 'el agua', english: 'water', emoji: '💧', color: 0x65bde2, shape: 'bottle', position: positions[2] },
+    { spanish: 'el café', english: 'coffee', emoji: '☕', color: 0x8b5a3c, shape: 'cup', position: positions[3] },
+    { spanish: 'la sal', english: 'salt', emoji: '🧂', color: 0xe8e8e4, shape: 'box', position: positions[4] },
+  ]},
 ];
 
 function playSound(kind: 'select' | 'wrong' | 'correct' | 'complete', muted: boolean) {
@@ -99,7 +119,7 @@ function useBackgroundMusic() {
   return { currentTrack, musicStatus, pause, play, stop };
 }
 
-function MarketScene({ onPick, active }: { onPick: (word: Word) => void; active: boolean }) {
+function MarketScene({ words, onPick, active }: { words: Word[]; onPick: (word: Word) => void; active: boolean }) {
   const mount = useRef<HTMLDivElement>(null);
   const handler = useRef(onPick);
   handler.current = onPick;
@@ -135,12 +155,18 @@ function MarketScene({ onPick, active }: { onPick: (word: Word) => void; active:
     words.forEach((word, i) => {
       const group = new THREE.Group(); group.position.set(...word.position); group.userData.word = word;
       const crate = new THREE.Mesh(new THREE.BoxGeometry(1.25, .32, 1.15), new THREE.MeshStandardMaterial({ color: 0x69452f })); crate.position.y = -.35; crate.castShadow = true; group.add(crate);
+      const material = new THREE.MeshStandardMaterial({ color: word.color });
       let item: THREE.Mesh;
-      if (word.english === 'milk') item = new THREE.Mesh(new THREE.BoxGeometry(.58, 1.2, .58), new THREE.MeshStandardMaterial({ color: word.color }));
-      else if (word.english === 'bread') { item = new THREE.Mesh(new THREE.CapsuleGeometry(.32, .9, 6, 12), new THREE.MeshStandardMaterial({ color: word.color })); item.rotation.z = Math.PI / 2; }
-      else if (word.english === 'cheese') item = new THREE.Mesh(new THREE.CylinderGeometry(.55, .55, .55, 3), new THREE.MeshStandardMaterial({ color: word.color }));
-      else if (word.english === 'fish') { item = new THREE.Mesh(new THREE.SphereGeometry(.52, 18, 12), new THREE.MeshStandardMaterial({ color: word.color })); item.scale.set(1.5, .6, .45); }
-      else item = new THREE.Mesh(new THREE.SphereGeometry(.48, 20, 16), new THREE.MeshStandardMaterial({ color: word.color }));
+      if (word.shape === 'carton') item = new THREE.Mesh(new THREE.BoxGeometry(.58, 1.2, .58), material);
+      else if (word.shape === 'loaf' || word.shape === 'capsule') { item = new THREE.Mesh(new THREE.CapsuleGeometry(.32, .9, 6, 12), material); item.rotation.z = Math.PI / 2; }
+      else if (word.shape === 'wedge') item = new THREE.Mesh(new THREE.CylinderGeometry(.55, .55, .55, 3), material);
+      else if (word.shape === 'fish') { item = new THREE.Mesh(new THREE.SphereGeometry(.52, 18, 12), material); item.scale.set(1.5, .6, .45); }
+      else if (word.shape === 'cone') { item = new THREE.Mesh(new THREE.ConeGeometry(.38, 1.25, 16), material); item.rotation.z = -.2; }
+      else if (word.shape === 'oval') { item = new THREE.Mesh(new THREE.SphereGeometry(.48, 20, 16), material); item.scale.set(.82, 1.2, .82); }
+      else if (word.shape === 'bottle') item = new THREE.Mesh(new THREE.CylinderGeometry(.23, .34, 1.3, 16), material);
+      else if (word.shape === 'cup') item = new THREE.Mesh(new THREE.CylinderGeometry(.42, .34, .72, 18), material);
+      else if (word.shape === 'box') item = new THREE.Mesh(new THREE.BoxGeometry(.72, .9, .56), material);
+      else item = new THREE.Mesh(new THREE.SphereGeometry(.48, 20, 16), material);
       item.position.y = .35; item.castShadow = true; group.add(item); pickables.push(group); scene.add(group);
       group.rotation.y = i * .12;
     });
@@ -156,37 +182,40 @@ function MarketScene({ onPick, active }: { onPick: (word: Word) => void; active:
     let frame = 0; const clock = new THREE.Clock();
     const render = () => { frame = requestAnimationFrame(render); const t = clock.getElapsedTime(); pickables.forEach((o, i) => { o.position.y = words[i].position[1] + Math.sin(t * 1.5 + i) * .035; }); renderer.render(scene, camera); }; render();
     return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', resize); renderer.domElement.removeEventListener('pointerdown', click); renderer.dispose(); host.removeChild(renderer.domElement); };
-  }, []);
+  }, [words]);
   return <div ref={mount} className={active ? 'scene' : 'scene paused'} aria-label="Interactive 3D market stall. Select an object to answer." />;
 }
 
 function App() {
-  const [round, setRound] = useState(0); const [score, setScore] = useState(0); const [streak, setStreak] = useState(0); const [started, setStarted] = useState(false); const [feedback, setFeedback] = useState<{ correct: boolean; message: string } | null>(null); const [muted, setMuted] = useState(false);
-  const order = useRef([...words].sort(() => Math.random() - .5)); const target = order.current[round % words.length]; const finished = round >= words.length;
+  const [levelIndex, setLevelIndex] = useState(0); const [round, setRound] = useState(0); const [score, setScore] = useState(0); const [streak, setStreak] = useState(0); const [started, setStarted] = useState(false); const [feedback, setFeedback] = useState<{ correct: boolean; message: string } | null>(null); const [muted, setMuted] = useState(false);
+  const level = levels[levelIndex]; const words = level.words;
+  const order = useRef([...levels[0].words].sort(() => Math.random() - .5)); const target = order.current[round % words.length]; const levelFinished = round >= words.length; const gameComplete = levelFinished && levelIndex === levels.length - 1;
   const { currentTrack, musicStatus, pause: pauseMusic, play: playMusic, stop: stopMusic } = useBackgroundMusic();
   const pick = useCallback((word: Word) => {
-    if (!started || feedback?.correct || finished) return;
+    if (!started || feedback?.correct || levelFinished) return;
     if (word.english === target.english) { playSound(round === words.length - 1 ? 'complete' : 'correct', muted); setScore((s) => s + 100 + streak * 25); setStreak((s) => s + 1); setFeedback({ correct: true, message: `Correct! ${target.english} is ${target.spanish} in Spanish.` }); }
     else { playSound('wrong', muted); setStreak(0); setFeedback({ correct: false, message: `${word.emoji} is ${word.english}. Look again for ${target.english}.` }); }
-  }, [started, feedback, finished, streak, target, muted, round]);
+  }, [started, feedback, levelFinished, streak, target, muted, round, words.length]);
   const next = () => { setFeedback(null); setRound((r) => r + 1); };
   const start = () => { setStarted(true); if (!muted) playMusic(); };
-  const restart = () => { order.current = [...words].sort(() => Math.random() - .5); setRound(0); setScore(0); setStreak(0); setFeedback(null); setStarted(true); if (!muted) playMusic(); };
+  const advanceLevel = () => { const nextLevel = levelIndex + 1; order.current = [...levels[nextLevel].words].sort(() => Math.random() - .5); setLevelIndex(nextLevel); setRound(0); setFeedback(null); };
+  const restart = () => { order.current = [...levels[0].words].sort(() => Math.random() - .5); setLevelIndex(0); setRound(0); setScore(0); setStreak(0); setFeedback(null); setStarted(true); if (!muted) playMusic(); };
   const toggleSound = () => {
     const nextMuted = !muted;
     setMuted(nextMuted);
     if (nextMuted) pauseMusic();
-    else if (started && !finished) playMusic();
+    else if (started && !gameComplete) playMusic();
   };
-  useEffect(() => { if (finished) stopMusic(); }, [finished, stopMusic]);
+  useEffect(() => { if (gameComplete) stopMusic(); }, [gameComplete, stopMusic]);
   return <main><header><a href="/" className="logo">Mercado <b>Quest</b></a><div className="header-tools"><div className="stats"><span>Score <b key={score} className="score-pop">{score}</b></span><span>Streak <b>×{streak}</b></span></div><button className="sound-toggle" onClick={toggleSound} aria-pressed={muted} aria-label={muted ? 'Turn sound on' : 'Mute sound'}>{muted ? 'Sound off' : 'Sound on'} <i>{muted ? '×' : '♪'}</i></button></div></header>
-    <section className="game"><MarketScene onPick={pick} active={started && !finished}/>
-      {started && !finished && <div className="choice-bar" aria-label="Market choices">{words.map((w, index) => <button key={w.english} style={{ '--delay': `${index * 45}ms` } as React.CSSProperties} onClick={() => { playSound('select', muted); pick(w); }} disabled={feedback?.correct}><span>{w.emoji}</span><b>{feedback?.correct && w.english === target.english ? w.english : 'Choose'}</b></button>)}</div>}
-      {!started && <div className="card start"><p className="eyebrow">A quick English vocabulary game</p><h1>Learn English<br/>at the market.</h1><ol><li><span><b>Read</b> the English word in your shopping mission.</span></li><li><span><b>Choose</b> the market item it names.</span></li><li><span><b>Check</b> the Spanish translation and build a streak.</span></li></ol><p className="round-note">5 English words · about 1 minute · no timer</p><button onClick={start}>Start first mission →</button></div>}
-      {started && !finished && <div className="mission" key={round}><div className="progress"><i style={{ width: `${((round + 1) / words.length) * 100}%` }}/></div><p>English mission {round + 1} of {words.length}</p><small>Find this English word</small><h2>{target.english}</h2><strong>Which item is it?</strong></div>}
-      {feedback?.correct && <div className="card feedback correct"><div className="sparkles" aria-hidden="true">✦ <i>●</i> ✦ <i>●</i></div><span>✓</span><p className="eyebrow">English word</p><h2>{target.emoji} {target.english}</h2><p><b>{target.english}</b> is <b>{target.spanish}</b> in Spanish.</p><button onClick={next}>{round === words.length - 1 ? 'See my results →' : 'Next mission →'}</button></div>}
+    <section className="game"><MarketScene key={levelIndex} words={words} onPick={pick} active={started && !levelFinished}/>
+      {started && !levelFinished && <div className="choice-bar" aria-label="Market choices">{words.map((w, index) => <button key={w.english} style={{ '--delay': `${index * 45}ms` } as React.CSSProperties} onClick={() => { playSound('select', muted); pick(w); }} disabled={feedback?.correct}><span>{w.emoji}</span><b>{feedback?.correct && w.english === target.english ? w.english : 'Choose'}</b></button>)}</div>}
+      {!started && <div className="card start"><p className="eyebrow">A three-level English vocabulary game</p><h1>Learn English<br/>at the market.</h1><ol><li><span><b>Read</b> the English word in your shopping mission.</span></li><li><span><b>Choose</b> the market item it names.</span></li><li><span><b>Check</b> the Spanish translation and unlock the next level.</span></li></ol><p className="round-note">3 levels · 15 English words · no timer</p><button onClick={start}>Start level 1 →</button></div>}
+      {started && !levelFinished && <div className="mission" key={`${levelIndex}-${round}`}><div className="progress"><i style={{ width: `${((round + 1) / words.length) * 100}%` }}/></div><p>Level {levelIndex + 1} of {levels.length} · {level.title}</p><small>Find this English word</small><h2>{target.english}</h2><strong>Mission {round + 1} of {words.length}</strong></div>}
+      {feedback?.correct && <div className="card feedback correct"><div className="sparkles" aria-hidden="true">✦ <i>●</i> ✦ <i>●</i></div><span>✓</span><p className="eyebrow">English word</p><h2>{target.emoji} {target.english}</h2><p><b>{target.english}</b> is <b>{target.spanish}</b> in Spanish.</p><button onClick={next}>{round === words.length - 1 ? (levelIndex === levels.length - 1 ? 'See my results →' : 'Finish level →') : 'Next mission →'}</button></div>}
       {feedback && !feedback.correct && <div className="try-again" role="status"><span>Not quite</span><p>{feedback.message}</p><button onClick={() => setFeedback(null)}>Try again</button></div>}
-      {finished && <div className="card finish"><p className="eyebrow">Market complete</p><h2>{score} points</h2><p>You matched {words.length} everyday market words. Play again to reinforce them in a new order.</p><button onClick={restart}>Play another round ↻</button></div>}
-    </section><footer><span>Tip</span><p>Tap a 3D object or its illustrated choice card. Wrong guesses do not end the mission.</p>{started && !finished && !muted && currentTrack && <small className="now-playing">{musicStatus === 'blocked' ? 'Music unavailable' : `♫ ${currentTrack}`}</small>}<details className="music-credits"><summary>Music credits</summary><div><p><a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500078" target="_blank" rel="noreferrer">Suave Standpipe</a>, <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1700069" target="_blank" rel="noreferrer">Bossa Antigua</a>, and <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1600054" target="_blank" rel="noreferrer">Lobby Time</a> by Kevin MacLeod.</p><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="license noreferrer">CC BY 4.0</a></div></details></footer></main>;
+      {levelFinished && !gameComplete && <div className="card finish"><p className="eyebrow">Level {levelIndex + 1} complete</p><h2>{level.title}</h2><p>You learned {words.length} English words. Next up: <b>{levels[levelIndex + 1].title}</b>.</p><button onClick={advanceLevel}>Start level {levelIndex + 2} →</button></div>}
+      {gameComplete && <div className="card finish"><p className="eyebrow">All levels complete</p><h2>{score} points</h2><p>You matched all 15 everyday market words. Play again to reinforce them in a new order.</p><button onClick={restart}>Play all levels again ↻</button></div>}
+    </section><footer><span>Tip</span><p>Tap a 3D object or its illustrated choice card. Wrong guesses do not end the mission.</p>{started && !gameComplete && !muted && currentTrack && <small className="now-playing">{musicStatus === 'blocked' ? 'Music unavailable' : `♫ ${currentTrack}`}</small>}<details className="music-credits"><summary>Music credits</summary><div><p><a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500078" target="_blank" rel="noreferrer">Suave Standpipe</a>, <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1700069" target="_blank" rel="noreferrer">Bossa Antigua</a>, and <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1600054" target="_blank" rel="noreferrer">Lobby Time</a> by Kevin MacLeod.</p><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="license noreferrer">CC BY 4.0</a></div></details></footer></main>;
 }
 export default App;
