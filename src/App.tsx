@@ -71,8 +71,8 @@ function MarketScene({ onPick, active }: { onPick: (word: Word) => void; active:
   useEffect(() => {
     const host = mount.current!;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf0dba5);
-    scene.fog = new THREE.Fog(0xf0dba5, 10, 19);
+    scene.background = new THREE.Color(0x0a0a0c);
+    scene.fog = new THREE.Fog(0x0a0a0c, 10, 19);
     const camera = new THREE.PerspectiveCamera(38, host.clientWidth / host.clientHeight, .1, 50);
     camera.position.set(0, 5.1, 10.8);
     camera.lookAt(0, .5, 0);
@@ -82,23 +82,23 @@ function MarketScene({ onPick, active }: { onPick: (word: Word) => void; active:
     renderer.shadowMap.enabled = true;
     host.appendChild(renderer.domElement);
 
-    scene.add(new THREE.HemisphereLight(0xfff4d8, 0x6d8b6d, 2.2));
-    const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(-4, 8, 5); sun.castShadow = true; scene.add(sun);
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 18), new THREE.MeshStandardMaterial({ color: 0x78966e }));
+    scene.add(new THREE.HemisphereLight(0xdde7ff, 0x111318, 1.8));
+    const sun = new THREE.DirectionalLight(0xffffff, 2.1); sun.position.set(-4, 8, 5); sun.castShadow = true; scene.add(sun);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 18), new THREE.MeshStandardMaterial({ color: 0x171a1d }));
     floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
 
     const stall = new THREE.Group(); scene.add(stall);
-    const wood = new THREE.MeshStandardMaterial({ color: 0x9a5638, roughness: .85 });
+    const wood = new THREE.MeshStandardMaterial({ color: 0x5c3528, roughness: .85 });
     const counter = new THREE.Mesh(new THREE.BoxGeometry(9, .45, 2.2), wood); counter.position.y = .1; counter.castShadow = true; stall.add(counter);
     [-4.2, 4.2].forEach((x) => { const post = new THREE.Mesh(new THREE.BoxGeometry(.22, 4.4, .22), wood); post.position.set(x, 2.2, -.8); stall.add(post); });
     const canopy = new THREE.Group();
-    for (let i = 0; i < 10; i++) { const stripe = new THREE.Mesh(new THREE.BoxGeometry(.9, .18, 2.8), new THREE.MeshStandardMaterial({ color: i % 2 ? 0xf8edcf : 0xe0573f })); stripe.position.x = -4.05 + i * .9; canopy.add(stripe); }
+    for (let i = 0; i < 10; i++) { const stripe = new THREE.Mesh(new THREE.BoxGeometry(.9, .18, 2.8), new THREE.MeshStandardMaterial({ color: i % 2 ? 0x292b30 : 0x8f342f })); stripe.position.x = -4.05 + i * .9; canopy.add(stripe); }
     canopy.position.y = 4.1; canopy.rotation.x = -.08; stall.add(canopy);
 
     const pickables: THREE.Object3D[] = [];
     words.forEach((word, i) => {
       const group = new THREE.Group(); group.position.set(...word.position); group.userData.word = word;
-      const crate = new THREE.Mesh(new THREE.BoxGeometry(1.25, .32, 1.15), new THREE.MeshStandardMaterial({ color: 0xb97948 })); crate.position.y = -.35; crate.castShadow = true; group.add(crate);
+      const crate = new THREE.Mesh(new THREE.BoxGeometry(1.25, .32, 1.15), new THREE.MeshStandardMaterial({ color: 0x69452f })); crate.position.y = -.35; crate.castShadow = true; group.add(crate);
       let item: THREE.Mesh;
       if (word.english === 'milk') item = new THREE.Mesh(new THREE.BoxGeometry(.58, 1.2, .58), new THREE.MeshStandardMaterial({ color: word.color }));
       else if (word.english === 'bread') { item = new THREE.Mesh(new THREE.CapsuleGeometry(.32, .9, 6, 12), new THREE.MeshStandardMaterial({ color: word.color })); item.rotation.z = Math.PI / 2; }
