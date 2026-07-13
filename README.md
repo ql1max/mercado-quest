@@ -1,11 +1,11 @@
-# Mercado Quest
+# Word Quest
 
-A tiny 3D vocabulary game for Spanish speakers learning English. Players read Spanish missions, select matching market objects, reveal the English word, and build a score and streak across quick randomized rounds.
+A hidden-object vocabulary game for Spanish speakers learning English. Players read an English target word, search illustrated market, airport, and city scenes, then confirm its article-free Spanish meaning while building a score and streak.
 
 ## Stack
 
-- Three.js
 - React + TypeScript + Vite
+- CSS and emoji-based scene sprites
 - Cloudflare Workers Static Assets
 
 ## Development

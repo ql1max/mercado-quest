@@ -1,36 +1,53 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import * as THREE from 'three';
 import './index.css';
 import './clarity.css';
 
-type Shape = 'sphere' | 'loaf' | 'carton' | 'wedge' | 'fish' | 'capsule' | 'cone' | 'oval' | 'bottle' | 'cup' | 'box';
-type Word = { spanish: string; english: string; emoji: string; color: number; shape: Shape; position: [number, number, number] };
-type Level = { title: string; words: Word[] };
+type Location = 'market' | 'airport' | 'street';
+type Word = { spanish: string; english: string; emoji: string; position: [number, number] };
+type Level = { title: string; location: Location; words: Word[] };
+type Decoration = { emoji: string; position: [number, number]; size?: number };
 
-const positions: [number, number, number][] = [[-3.2, .65, .2], [-1.55, .65, -.2], [0, .75, .25], [1.6, .65, -.2], [3.2, .65, .2]];
 const levels: Level[] = [
-  { title: 'Market basics', words: [
-    { spanish: 'la manzana', english: 'apple', emoji: '🍎', color: 0xe84d3d, shape: 'sphere', position: positions[0] },
-    { spanish: 'el pan', english: 'bread', emoji: '🥖', color: 0xdca45c, shape: 'loaf', position: positions[1] },
-    { spanish: 'la leche', english: 'milk', emoji: '🥛', color: 0xf5f0dd, shape: 'carton', position: positions[2] },
-    { spanish: 'el queso', english: 'cheese', emoji: '🧀', color: 0xf0c93d, shape: 'wedge', position: positions[3] },
-    { spanish: 'el pescado', english: 'fish', emoji: '🐟', color: 0x63a9c8, shape: 'fish', position: positions[4] },
+  { title: 'Día de mercado', location: 'market', words: [
+    { spanish: 'manzana', english: 'apple', emoji: '🍎', position: [14, 62] },
+    { spanish: 'pan', english: 'bread', emoji: '🥖', position: [32, 46] },
+    { spanish: 'leche', english: 'milk', emoji: '🥛', position: [51, 68] },
+    { spanish: 'queso', english: 'cheese', emoji: '🧀', position: [70, 43] },
+    { spanish: 'pescado', english: 'fish', emoji: '🐟', position: [86, 63] },
   ]},
-  { title: 'Fresh produce', words: [
-    { spanish: 'el plátano', english: 'banana', emoji: '🍌', color: 0xf2cf45, shape: 'capsule', position: positions[0] },
-    { spanish: 'la naranja', english: 'orange', emoji: '🍊', color: 0xf28c28, shape: 'sphere', position: positions[1] },
-    { spanish: 'la zanahoria', english: 'carrot', emoji: '🥕', color: 0xe86f2d, shape: 'cone', position: positions[2] },
-    { spanish: 'el tomate', english: 'tomato', emoji: '🍅', color: 0xd93c35, shape: 'sphere', position: positions[3] },
-    { spanish: 'la papa', english: 'potato', emoji: '🥔', color: 0xa97b50, shape: 'oval', position: positions[4] },
+  { title: 'En el aeropuerto', location: 'airport', words: [
+    { spanish: 'maleta', english: 'suitcase', emoji: '🧳', position: [13, 68] },
+    { spanish: 'pasaporte', english: 'passport', emoji: '📕', position: [31, 43] },
+    { spanish: 'boleto', english: 'ticket', emoji: '🎫', position: [50, 66] },
+    { spanish: 'avión', english: 'airplane', emoji: '✈️', position: [70, 29] },
+    { spanish: 'audífonos', english: 'headphones', emoji: '🎧', position: [87, 53] },
   ]},
-  { title: 'Pantry picks', words: [
-    { spanish: 'el arroz', english: 'rice', emoji: '🍚', color: 0xf1ead9, shape: 'box', position: positions[0] },
-    { spanish: 'el huevo', english: 'egg', emoji: '🥚', color: 0xf3ead0, shape: 'oval', position: positions[1] },
-    { spanish: 'el agua', english: 'water', emoji: '💧', color: 0x65bde2, shape: 'bottle', position: positions[2] },
-    { spanish: 'el café', english: 'coffee', emoji: '☕', color: 0x8b5a3c, shape: 'cup', position: positions[3] },
-    { spanish: 'la sal', english: 'salt', emoji: '🧂', color: 0xe8e8e4, shape: 'box', position: positions[4] },
+  { title: 'Paseo por la ciudad', location: 'street', words: [
+    { spanish: 'bicicleta', english: 'bicycle', emoji: '🚲', position: [14, 64] },
+    { spanish: 'autobús', english: 'bus', emoji: '🚌', position: [32, 48] },
+    { spanish: 'perro', english: 'dog', emoji: '🐕', position: [51, 70] },
+    { spanish: 'banco', english: 'bench', emoji: '🪑', position: [69, 57] },
+    { spanish: 'semáforo', english: 'traffic light', emoji: '🚦', position: [86, 36] },
   ]},
 ];
+
+const decorations: Record<Location, Decoration[]> = {
+  market: [
+    { emoji: '🧺', position: [8, 40], size: 38 }, { emoji: '🌽', position: [24, 65] }, { emoji: '🍇', position: [41, 42] },
+    { emoji: '🥬', position: [60, 59] }, { emoji: '🌻', position: [78, 67] }, { emoji: '📦', position: [93, 44], size: 42 },
+    { emoji: '🧑🏽‍🌾', position: [20, 28], size: 48 }, { emoji: '🛍️', position: [80, 31], size: 38 },
+  ],
+  airport: [
+    { emoji: '💺', position: [8, 45], size: 42 }, { emoji: '☕', position: [22, 62] }, { emoji: '🕐', position: [41, 25], size: 38 },
+    { emoji: '🪴', position: [60, 64], size: 42 }, { emoji: '🛄', position: [78, 43], size: 38 }, { emoji: '🚪', position: [94, 66], size: 42 },
+    { emoji: '👩🏽‍✈️', position: [20, 29], size: 48 }, { emoji: '🧍🏻', position: [81, 68], size: 46 },
+  ],
+  street: [
+    { emoji: '🌳', position: [8, 41], size: 50 }, { emoji: '🚕', position: [23, 69], size: 46 }, { emoji: '🛴', position: [42, 41] },
+    { emoji: '🗞️', position: [59, 66] }, { emoji: '🐦', position: [77, 27] }, { emoji: '🚧', position: [94, 67], size: 42 },
+    { emoji: '🚶🏽‍♀️', position: [21, 31], size: 48 }, { emoji: '🏪', position: [80, 49], size: 48 },
+  ],
+};
 
 function playSound(kind: 'select' | 'wrong' | 'correct' | 'complete', muted: boolean) {
   if (muted) return;
@@ -119,71 +136,14 @@ function useBackgroundMusic() {
   return { currentTrack, musicStatus, pause, play, stop };
 }
 
-function MarketScene({ words, onPick, active }: { words: Word[]; onPick: (word: Word) => void; active: boolean }) {
-  const mount = useRef<HTMLDivElement>(null);
-  const handler = useRef(onPick);
-  handler.current = onPick;
-
-  useEffect(() => {
-    const host = mount.current!;
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0a0c);
-    scene.fog = new THREE.Fog(0x0a0a0c, 10, 19);
-    const camera = new THREE.PerspectiveCamera(38, host.clientWidth / host.clientHeight, .1, 50);
-    camera.position.set(0, 5.1, 10.8);
-    camera.lookAt(0, .5, 0);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    renderer.setSize(host.clientWidth, host.clientHeight);
-    renderer.shadowMap.enabled = true;
-    host.appendChild(renderer.domElement);
-
-    scene.add(new THREE.HemisphereLight(0xdde7ff, 0x111318, 1.8));
-    const sun = new THREE.DirectionalLight(0xffffff, 2.1); sun.position.set(-4, 8, 5); sun.castShadow = true; scene.add(sun);
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 18), new THREE.MeshStandardMaterial({ color: 0x171a1d }));
-    floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
-
-    const stall = new THREE.Group(); scene.add(stall);
-    const wood = new THREE.MeshStandardMaterial({ color: 0x5c3528, roughness: .85 });
-    const counter = new THREE.Mesh(new THREE.BoxGeometry(9, .45, 2.2), wood); counter.position.y = .1; counter.castShadow = true; stall.add(counter);
-    [-4.2, 4.2].forEach((x) => { const post = new THREE.Mesh(new THREE.BoxGeometry(.22, 4.4, .22), wood); post.position.set(x, 2.2, -.8); stall.add(post); });
-    const canopy = new THREE.Group();
-    for (let i = 0; i < 10; i++) { const stripe = new THREE.Mesh(new THREE.BoxGeometry(.9, .18, 2.8), new THREE.MeshStandardMaterial({ color: i % 2 ? 0x292b30 : 0x8f342f })); stripe.position.x = -4.05 + i * .9; canopy.add(stripe); }
-    canopy.position.y = 4.1; canopy.rotation.x = -.08; stall.add(canopy);
-
-    const pickables: THREE.Object3D[] = [];
-    words.forEach((word, i) => {
-      const group = new THREE.Group(); group.position.set(...word.position); group.userData.word = word;
-      const crate = new THREE.Mesh(new THREE.BoxGeometry(1.25, .32, 1.15), new THREE.MeshStandardMaterial({ color: 0x69452f })); crate.position.y = -.35; crate.castShadow = true; group.add(crate);
-      const material = new THREE.MeshStandardMaterial({ color: word.color });
-      let item: THREE.Mesh;
-      if (word.shape === 'carton') item = new THREE.Mesh(new THREE.BoxGeometry(.58, 1.2, .58), material);
-      else if (word.shape === 'loaf' || word.shape === 'capsule') { item = new THREE.Mesh(new THREE.CapsuleGeometry(.32, .9, 6, 12), material); item.rotation.z = Math.PI / 2; }
-      else if (word.shape === 'wedge') item = new THREE.Mesh(new THREE.CylinderGeometry(.55, .55, .55, 3), material);
-      else if (word.shape === 'fish') { item = new THREE.Mesh(new THREE.SphereGeometry(.52, 18, 12), material); item.scale.set(1.5, .6, .45); }
-      else if (word.shape === 'cone') { item = new THREE.Mesh(new THREE.ConeGeometry(.38, 1.25, 16), material); item.rotation.z = -.2; }
-      else if (word.shape === 'oval') { item = new THREE.Mesh(new THREE.SphereGeometry(.48, 20, 16), material); item.scale.set(.82, 1.2, .82); }
-      else if (word.shape === 'bottle') item = new THREE.Mesh(new THREE.CylinderGeometry(.23, .34, 1.3, 16), material);
-      else if (word.shape === 'cup') item = new THREE.Mesh(new THREE.CylinderGeometry(.42, .34, .72, 18), material);
-      else if (word.shape === 'box') item = new THREE.Mesh(new THREE.BoxGeometry(.72, .9, .56), material);
-      else item = new THREE.Mesh(new THREE.SphereGeometry(.48, 20, 16), material);
-      item.position.y = .35; item.castShadow = true; group.add(item); pickables.push(group); scene.add(group);
-      group.rotation.y = i * .12;
-    });
-
-    const raycaster = new THREE.Raycaster(); const pointer = new THREE.Vector2();
-    const click = (event: PointerEvent) => {
-      const rect = renderer.domElement.getBoundingClientRect(); pointer.set(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
-      raycaster.setFromCamera(pointer, camera); const hit = raycaster.intersectObjects(pickables, true)[0];
-      if (hit) { let object: THREE.Object3D | null = hit.object; while (object && !object.userData.word) object = object.parent; if (object?.userData.word) handler.current(object.userData.word); }
-    };
-    renderer.domElement.addEventListener('pointerdown', click);
-    const resize = () => { camera.aspect = host.clientWidth / host.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(host.clientWidth, host.clientHeight); }; window.addEventListener('resize', resize);
-    let frame = 0; const clock = new THREE.Clock();
-    const render = () => { frame = requestAnimationFrame(render); const t = clock.getElapsedTime(); pickables.forEach((o, i) => { o.position.y = words[i].position[1] + Math.sin(t * 1.5 + i) * .035; }); renderer.render(scene, camera); }; render();
-    return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', resize); renderer.domElement.removeEventListener('pointerdown', click); renderer.dispose(); host.removeChild(renderer.domElement); };
-  }, [words]);
-  return <div ref={mount} className={active ? 'scene' : 'scene paused'} aria-label="Interactive 3D market stall. Select an object to answer." />;
+function QuestScene({ location, words, onPick, active }: { location: Location; words: Word[]; onPick: (word: Word) => void; active: boolean }) {
+  const locationName = location === 'market' ? 'mercado' : location === 'airport' ? 'aeropuerto' : 'ciudad';
+  return <div className={`scene location-${location}${active ? '' : ' paused'}`} role="group" aria-label={`Escena de objetos escondidos: ${locationName}`}>
+    <div className="scene-landmark" aria-hidden="true" />
+    <div className="scene-label" aria-hidden="true">{locationName}</div>
+    {decorations[location].map((decoration, index) => <span className="scene-decoration" key={`${decoration.emoji}-${index}`} style={{ left: `${decoration.position[0]}%`, top: `${decoration.position[1]}%`, fontSize: `${decoration.size ?? 32}px` }} aria-hidden="true">{decoration.emoji}</span>)}
+    {words.map((word, index) => <button className="scene-item" key={word.english} style={{ left: `${word.position[0]}%`, top: `${word.position[1]}%`, '--item-delay': `${index * 60}ms` } as React.CSSProperties} onClick={() => onPick(word)} disabled={!active} aria-label={`Elegir objeto ${index + 1}`}><span aria-hidden="true">{word.emoji}</span></button>)}
+  </div>;
 }
 
 function App() {
@@ -193,8 +153,8 @@ function App() {
   const { currentTrack, musicStatus, pause: pauseMusic, play: playMusic, stop: stopMusic } = useBackgroundMusic();
   const pick = useCallback((word: Word) => {
     if (!started || feedback?.correct || levelFinished) return;
-    if (word.english === target.english) { playSound(round === words.length - 1 ? 'complete' : 'correct', muted); setScore((s) => s + 100 + streak * 25); setStreak((s) => s + 1); setFeedback({ correct: true, message: `Correct! ${target.english} is ${target.spanish} in Spanish.` }); }
-    else { playSound('wrong', muted); setStreak(0); setFeedback({ correct: false, message: `${word.emoji} is ${word.english}. Look again for ${target.english}.` }); }
+    if (word.english === target.english) { playSound(round === words.length - 1 ? 'complete' : 'correct', muted); setScore((s) => s + 100 + streak * 25); setStreak((s) => s + 1); setFeedback({ correct: true, message: `¡Correcto! ${target.english} significa ${target.spanish}.` }); }
+    else { playSound('wrong', muted); setStreak(0); setFeedback({ correct: false, message: `${word.emoji} es ${word.english}. Busca otra vez ${target.english}.` }); }
   }, [started, feedback, levelFinished, streak, target, muted, round, words.length]);
   const next = () => { setFeedback(null); setRound((r) => r + 1); };
   const start = () => { setStarted(true); if (!muted) playMusic(); };
@@ -207,15 +167,15 @@ function App() {
     else if (started && !gameComplete) playMusic();
   };
   useEffect(() => { if (gameComplete) stopMusic(); }, [gameComplete, stopMusic]);
-  return <main><header><a href="/" className="logo">Mercado <b>Quest</b></a><div className="header-tools"><div className="stats"><span>Score <b key={score} className="score-pop">{score}</b></span><span>Streak <b>×{streak}</b></span></div><button className="sound-toggle" onClick={toggleSound} aria-pressed={muted} aria-label={muted ? 'Turn sound on' : 'Mute sound'}>{muted ? 'Sound off' : 'Sound on'} <i>{muted ? '×' : '♪'}</i></button></div></header>
-    <section className="game"><MarketScene key={levelIndex} words={words} onPick={pick} active={started && !levelFinished}/>
-      {started && !levelFinished && <div className="choice-bar" aria-label="Market choices">{words.map((w, index) => <button key={w.english} style={{ '--delay': `${index * 45}ms` } as React.CSSProperties} onClick={() => { playSound('select', muted); pick(w); }} disabled={feedback?.correct}><span>{w.emoji}</span><b>{feedback?.correct && w.english === target.english ? w.english : 'Choose'}</b></button>)}</div>}
-      {!started && <div className="card start"><p className="eyebrow">A three-level English vocabulary game</p><h1>Learn English<br/>at the market.</h1><ol><li><span><b>Read</b> the English word in your shopping mission.</span></li><li><span><b>Choose</b> the market item it names.</span></li><li><span><b>Check</b> the Spanish translation and unlock the next level.</span></li></ol><p className="round-note">3 levels · 15 English words · no timer</p><button onClick={start}>Start level 1 →</button></div>}
-      {started && !levelFinished && <div className="mission" key={`${levelIndex}-${round}`}><div className="progress"><i style={{ width: `${((round + 1) / words.length) * 100}%` }}/></div><p>Level {levelIndex + 1} of {levels.length} · {level.title}</p><small>Find this English word</small><h2>{target.english}</h2><strong>Mission {round + 1} of {words.length}</strong></div>}
-      {feedback?.correct && <div className="card feedback correct"><div className="sparkles" aria-hidden="true">✦ <i>●</i> ✦ <i>●</i></div><span>✓</span><p className="eyebrow">English word</p><h2>{target.emoji} {target.english}</h2><p><b>{target.english}</b> is <b>{target.spanish}</b> in Spanish.</p><button onClick={next}>{round === words.length - 1 ? (levelIndex === levels.length - 1 ? 'See my results →' : 'Finish level →') : 'Next mission →'}</button></div>}
-      {feedback && !feedback.correct && <div className="try-again" role="status"><span>Not quite</span><p>{feedback.message}</p><button onClick={() => setFeedback(null)}>Try again</button></div>}
-      {levelFinished && !gameComplete && <div className="card finish"><p className="eyebrow">Level {levelIndex + 1} complete</p><h2>{level.title}</h2><p>You learned {words.length} English words. Next up: <b>{levels[levelIndex + 1].title}</b>.</p><button onClick={advanceLevel}>Start level {levelIndex + 2} →</button></div>}
-      {gameComplete && <div className="card finish"><p className="eyebrow">All levels complete</p><h2>{score} points</h2><p>You matched all 15 everyday market words. Play again to reinforce them in a new order.</p><button onClick={restart}>Play all levels again ↻</button></div>}
-    </section><footer><span>Tip</span><p>Tap a 3D object or its illustrated choice card. Wrong guesses do not end the mission.</p>{started && !gameComplete && !muted && currentTrack && <small className="now-playing">{musicStatus === 'blocked' ? 'Music unavailable' : `♫ ${currentTrack}`}</small>}<details className="music-credits"><summary>Music credits</summary><div><p><a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500078" target="_blank" rel="noreferrer">Suave Standpipe</a>, <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1700069" target="_blank" rel="noreferrer">Bossa Antigua</a>, and <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1600054" target="_blank" rel="noreferrer">Lobby Time</a> by Kevin MacLeod.</p><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="license noreferrer">CC BY 4.0</a></div></details></footer></main>;
+  return <main><header><a href="/" className="logo">Word <b>Quest</b></a><div className="header-tools"><div className="stats"><span>Puntaje <b key={score} className="score-pop">{score}</b></span><span>Racha <b>×{streak}</b></span></div><button className="sound-toggle" onClick={toggleSound} aria-pressed={muted} aria-label={muted ? 'Activar sonido' : 'Silenciar'}>{muted ? 'Sin sonido' : 'Sonido'} <i>{muted ? '×' : '♪'}</i></button></div></header>
+    <section className="game"><QuestScene key={levelIndex} location={level.location} words={words} onPick={pick} active={started && !levelFinished}/>
+      {started && !levelFinished && <div className="choice-bar" aria-label="Objetos disponibles">{words.map((w, index) => <button key={w.english} style={{ '--delay': `${index * 45}ms` } as React.CSSProperties} onClick={() => { playSound('select', muted); pick(w); }} disabled={feedback?.correct}><span>{w.emoji}</span><b>{feedback?.correct && w.english === target.english ? w.english : 'Elegir'}</b></button>)}</div>}
+      {!started && <div className="card start"><p className="eyebrow">Una aventura de vocabulario inglés</p><h1>Aprende inglés<br/>explorando.</h1><ol><li><span><b>Lee</b> la palabra en inglés de cada reto.</span></li><li><span><b>Busca</b> el objeto escondido en la escena.</span></li><li><span><b>Confirma</b> su significado en español y avanza.</span></li></ol><p className="round-note">3 lugares · 15 palabras en inglés · sin límite de tiempo</p><button onClick={start}>Empezar nivel 1 →</button></div>}
+      {started && !levelFinished && <div className="mission" key={`${levelIndex}-${round}`}><div className="progress"><i style={{ width: `${((round + 1) / words.length) * 100}%` }}/></div><p>Nivel {levelIndex + 1} de {levels.length} · {level.title}</p><small>Encuentra esta palabra en inglés</small><h2>{target.english}</h2><strong>Reto {round + 1} de {words.length}</strong></div>}
+      {feedback?.correct && <div className="card feedback correct"><div className="sparkles" aria-hidden="true">✦ <i>●</i> ✦ <i>●</i></div><span>✓</span><p className="eyebrow">Palabra en inglés</p><h2>{target.emoji} {target.english}</h2><p><b>{target.english}</b> significa <b>{target.spanish}</b>.</p><button onClick={next}>{round === words.length - 1 ? (levelIndex === levels.length - 1 ? 'Ver mis resultados →' : 'Terminar nivel →') : 'Siguiente reto →'}</button></div>}
+      {feedback && !feedback.correct && <div className="try-again" role="status"><span>Casi</span><p>{feedback.message}</p><button onClick={() => setFeedback(null)}>Intentar de nuevo</button></div>}
+      {levelFinished && !gameComplete && <div className="card finish"><p className="eyebrow">Nivel {levelIndex + 1} completado</p><h2>{level.title}</h2><p>Aprendiste {words.length} palabras en inglés. Siguiente lugar: <b>{levels[levelIndex + 1].title}</b>.</p><button onClick={advanceLevel}>Empezar nivel {levelIndex + 2} →</button></div>}
+      {gameComplete && <div className="card finish"><p className="eyebrow">Completaste todos los niveles</p><h2>{score} puntos</h2><p>Encontraste las 15 palabras en inglés. Juega otra vez para practicarlas en un orden nuevo.</p><button onClick={restart}>Jugar todos los niveles otra vez ↻</button></div>}
+    </section><footer><span>Consejo</span><p>Toca un objeto escondido o su tarjeta ilustrada. Los intentos incorrectos no terminan el reto.</p>{started && !gameComplete && !muted && currentTrack && <small className="now-playing">{musicStatus === 'blocked' ? 'Música no disponible' : `♫ ${currentTrack}`}</small>}<details className="music-credits"><summary>Créditos de música</summary><div><p><a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500078" target="_blank" rel="noreferrer">Suave Standpipe</a>, <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1700069" target="_blank" rel="noreferrer">Bossa Antigua</a> y <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1600054" target="_blank" rel="noreferrer">Lobby Time</a>, de Kevin MacLeod.</p><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="license noreferrer">CC BY 4.0</a></div></details></footer></main>;
 }
 export default App;

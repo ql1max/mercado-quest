@@ -42,11 +42,27 @@ header {
 .stats b { margin-left: 6px; color: var(--text); font-size: 15px; }
 
 .game { position: relative; height: calc(100vh - 120px); min-height: 590px; overflow: hidden; background: #111; }
-.scene { position: absolute; inset: 0; }
-.scene::after { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(10,10,10,.16), transparent 30%, rgba(10,10,10,.22)); content: ''; }
-.scene canvas { display: block; cursor: pointer; }
-.scene.paused canvas { filter: saturate(.72) brightness(.65); }
-.scene.paused::after { background: rgba(10,10,10,.36); }
+.scene { position: absolute; inset: 0; overflow: hidden; isolation: isolate; }
+.scene::before { position: absolute; z-index: -2; inset: 58% 0 0; content: ''; background: rgba(20, 20, 24, .46); }
+.scene::after { position: absolute; z-index: 4; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(10,10,10,.12), transparent 34%, rgba(10,10,10,.28)); content: ''; }
+.location-market { background: linear-gradient(180deg, #54788c 0 35%, #8b674b 35% 58%, #3d342c 58%); }
+.location-airport { background: linear-gradient(180deg, #698ba2 0 40%, #3a4a57 40% 58%, #353a40 58%); }
+.location-street { background: linear-gradient(180deg, #6c8da0 0 42%, #6f6257 42% 58%, #35383c 58%); }
+.scene-landmark { position: absolute; z-index: -1; pointer-events: none; }
+.location-market .scene-landmark { top: 19%; right: 7%; bottom: 24%; left: 7%; border: 8px solid #573d2d; border-top-width: 16px; background: linear-gradient(180deg, transparent 0 22%, #79513a 22% 29%, transparent 29% 72%, #62422f 72% 100%); box-shadow: inset 0 58px 0 rgba(255,255,255,.05); }
+.location-market .scene-landmark::before { position: absolute; top: -16px; right: -8px; left: -8px; height: 64px; content: ''; background: repeating-linear-gradient(90deg, #a8443d 0 10%, #efd2a9 10% 20%); clip-path: polygon(0 0,100% 0,96% 100%,4% 100%); }
+.location-airport .scene-landmark { top: 17%; right: 5%; bottom: 27%; left: 5%; border: 12px solid #283945; border-radius: 4px; background: repeating-linear-gradient(90deg, #79a8c0 0 18%, #2d4656 18% 20%); box-shadow: inset 0 -72px 0 #59636b; }
+.location-airport .scene-landmark::after { position: absolute; right: 31%; bottom: -10px; left: 31%; height: 55px; border-radius: 4px; background: #d3ab48; color: #18222a; content: 'GATES  A1–A5'; display: grid; place-items: center; font-weight: 700; letter-spacing: .08em; }
+.location-street .scene-landmark { top: 14%; right: 4%; bottom: 32%; left: 4%; background: linear-gradient(90deg, #8c504d 0 22%, transparent 22% 25%, #526b80 25% 48%, transparent 48% 52%, #9a794e 52% 73%, transparent 73% 77%, #625675 77%); clip-path: polygon(0 18%,22% 18%,22% 0,48% 0,48% 23%,73% 23%,73% 8%,100% 8%,100% 100%,0 100%); }
+.scene-label { position: absolute; z-index: 1; top: 18px; right: 20px; padding: 7px 10px; border: 1px solid rgba(255,255,255,.35); border-radius: 999px; background: rgba(12,12,14,.62); color: #fff; font-size: 13px; font-weight: 700; text-transform: capitalize; }
+.scene-decoration { position: absolute; z-index: 1; transform: translate(-50%, -50%); filter: drop-shadow(0 4px 4px rgba(0,0,0,.38)); line-height: 1; user-select: none; }
+.scene-item { position: absolute; z-index: 2; width: 68px; height: 68px; padding: 0; transform: translate(-50%, -50%); border: 2px solid transparent; border-radius: 16px; background: rgba(10,10,12,.18); color: #fff; cursor: pointer; filter: drop-shadow(0 6px 5px rgba(0,0,0,.42)); animation: item-arrive 380ms cubic-bezier(.22,1,.36,1) both; animation-delay: var(--item-delay); transition: transform 160ms ease, border-color 160ms ease, background-color 160ms ease; }
+.scene-item span { font-size: 42px; line-height: 1; }
+.scene-item:hover { z-index: 3; transform: translate(-50%, -50%) scale(1.14); border-color: rgba(255,255,255,.75); background: rgba(10,10,12,.64); }
+.scene-item:disabled { cursor: default; }
+.scene.paused > :not(.scene-label) { filter: saturate(.72) brightness(.7); }
+.scene.paused::after { background: rgba(10,10,10,.34); }
+@keyframes item-arrive { from { opacity: 0; transform: translate(-50%, -35%) scale(.7); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
 
 .mission {
   position: absolute;
@@ -126,6 +142,9 @@ button:focus-visible, a:focus-visible { outline: 2px solid #ffffff; outline-offs
   .stats span { display: grid; gap: 1px; }
   .stats b { margin-left: 0; }
   .game { height: calc(100vh - 114px); min-height: 620px; }
+  .scene-item { width: 54px; height: 54px; border-radius: 13px; }
+  .scene-item span { font-size: 34px; }
+  .scene-label { top: 10px; right: 10px; font-size: 12px; }
   .mission { top: 14px; width: min(90%, 340px); }
   .card { width: calc(100% - 28px); padding: 28px 22px; }
   .card h1 { font-size: 40px; }
@@ -135,5 +154,6 @@ button:focus-visible, a:focus-visible { outline: 2px solid #ffffff; outline-offs
 
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; }
-  .card button { transition: none; }
+  .card button, .scene-item { transition: none; }
+  .scene-item { animation: none; }
 }
