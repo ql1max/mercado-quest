@@ -38,10 +38,10 @@ header {
 .logo { color: inherit; font-size: 17px; font-weight: 700; letter-spacing: -.025em; text-decoration: none; }
 .logo b { color: var(--text); }
 .logo b::before { content: ' / '; color: var(--subtle); font-weight: 400; }
-.stats { display: flex; gap: 24px; color: var(--muted); font: 9px 'DM Mono', monospace; letter-spacing: .04em; text-transform: uppercase; }
-.stats b { margin-left: 6px; color: var(--text); font-size: 11px; }
+.stats { display: flex; gap: 24px; color: var(--muted); font: 11px 'DM Mono', monospace; letter-spacing: .04em; text-transform: uppercase; }
+.stats b { margin-left: 6px; color: var(--text); font-size: 13px; }
 
-.game { position: relative; height: calc(100vh - 112px); min-height: 590px; overflow: hidden; background: #111; }
+.game { position: relative; height: calc(100vh - 120px); min-height: 590px; overflow: hidden; background: #111; }
 .scene { position: absolute; inset: 0; }
 .scene::after { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(10,10,10,.16), transparent 30%, rgba(10,10,10,.22)); content: ''; }
 .scene canvas { display: block; cursor: pointer; }
@@ -65,10 +65,10 @@ header {
   text-align: center;
   backdrop-filter: blur(12px);
 }
-.mission p, .eyebrow { margin: 0 0 6px; color: var(--muted); font: 9px 'DM Mono', monospace; letter-spacing: .09em; text-transform: uppercase; }
-.mission h2 { margin: 0; color: var(--text); font-size: 22px; letter-spacing: -.03em; }
+.mission p, .eyebrow { margin: 0 0 6px; color: var(--muted); font: 11px 'DM Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+.mission h2 { margin: 0; color: var(--text); font-size: 24px; letter-spacing: -.03em; }
 .mission em { color: var(--accent); font-style: normal; }
-.mission small { color: var(--muted); font-size: 10px; }
+.mission small { color: var(--muted); font-size: 12px; }
 
 .card {
   position: absolute;
@@ -87,7 +87,7 @@ header {
   backdrop-filter: blur(16px);
 }
 .card h1 { margin: 10px 0 20px; color: #fafafa; font-size: clamp(35px, 5vw, 58px); line-height: .98; letter-spacing: -.055em; }
-.card p { max-width: 390px; margin: 0 auto 24px; color: var(--muted); font-size: 13px; line-height: 1.65; }
+.card p { max-width: 390px; margin: 0 auto 24px; color: var(--muted); font-size: 15px; line-height: 1.6; }
 .card button {
   padding: 12px 18px;
   border: 1px solid #ffffff;
@@ -104,7 +104,7 @@ header {
 .finish h2 { margin: 8px 0 12px; color: #fafafa; font-size: 50px; letter-spacing: -.04em; }
 
 footer {
-  height: 48px;
+  height: 56px;
   padding: 0 4vw;
   display: flex;
   align-items: center;
@@ -112,9 +112,9 @@ footer {
   border-top: 1px solid var(--border);
   background: var(--background);
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
-footer span { padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; color: var(--text); font: 9px 'DM Mono', monospace; text-transform: uppercase; }
+footer span { padding: 3px 6px; border: 1px solid var(--border-strong); border-radius: 4px; color: var(--text); font: 10px 'DM Mono', monospace; text-transform: uppercase; }
 footer p { margin: 0; }
 
 button:focus-visible, a:focus-visible { outline: 2px solid #ffffff; outline-offset: 3px; }
@@ -125,12 +125,12 @@ button:focus-visible, a:focus-visible { outline: 2px solid #ffffff; outline-offs
   .stats { gap: 10px; }
   .stats span { display: grid; gap: 1px; }
   .stats b { margin-left: 0; }
-  .game { height: calc(100vh - 106px); min-height: 620px; }
+  .game { height: calc(100vh - 114px); min-height: 620px; }
   .mission { top: 14px; width: min(90%, 340px); }
   .card { width: calc(100% - 28px); padding: 28px 22px; }
   .card h1 { font-size: 40px; }
-  footer { height: 46px; padding: 0 16px; }
-  footer p { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  footer { height: 54px; padding: 0 16px; }
+  footer > p { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
 @media (prefers-reduced-motion: reduce) {

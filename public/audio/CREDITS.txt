@@ -1,0 +1,15 @@
+Mercado Quest music
+
+“Suave Standpipe” by Kevin MacLeod (incompetech.com)
+https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500078
+
+“Bossa Antigua” by Kevin MacLeod (incompetech.com)
+https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1700069
+
+“Lobby Time” by Kevin MacLeod (incompetech.com)
+https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1600054
+
+Licensed under Creative Commons: By Attribution 4.0
+https://creativecommons.org/licenses/by/4.0/
+
+The deployed copies are transcoded to 128 kbps MP3 for web delivery. The music is otherwise unchanged.

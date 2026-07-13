@@ -27,40 +27,76 @@ function playSound(kind: 'select' | 'wrong' | 'correct' | 'complete', muted: boo
   window.setTimeout(() => void context.close(), 700);
 }
 
-function useElevatorMusic(active: boolean) {
+const musicTracks = [
+  { title: 'Suave Standpipe', src: '/audio/suave-standpipe.mp3' },
+  { title: 'Bossa Antigua', src: '/audio/bossa-antigua.mp3' },
+  { title: 'Lobby Time', src: '/audio/lobby-time.mp3' },
+];
+
+function useBackgroundMusic() {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const trackIndex = useRef(Math.floor(Math.random() * musicTracks.length));
+  const failedTracks = useRef(0);
+  const [currentTrack, setCurrentTrack] = useState<string | null>(null);
+  const [musicStatus, setMusicStatus] = useState<'idle' | 'playing' | 'paused' | 'blocked'>('idle');
+
+  const play = useCallback((replaceTrack = false) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const track = musicTracks[trackIndex.current];
+    if (replaceTrack || !audio.src) audio.src = track.src;
+    audio.volume = .16;
+    setCurrentTrack(track.title);
+    void audio.play()
+      .then(() => setMusicStatus('playing'))
+      .catch(() => setMusicStatus('blocked'));
+  }, []);
+  const pause = useCallback(() => {
+    audioRef.current?.pause();
+    setMusicStatus('paused');
+  }, []);
+  const stop = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.pause();
+    audio.currentTime = 0;
+    setMusicStatus('idle');
+  }, []);
+
   useEffect(() => {
-    if (!active) return;
-    const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    const context = new AudioContextClass();
-    const master = context.createGain();
-    master.gain.value = .055;
-    master.connect(context.destination);
-    const chords = [
-      [261.63, 329.63, 392, 493.88],
-      [220, 261.63, 329.63, 392],
-      [174.61, 220, 261.63, 349.23],
-      [196, 246.94, 293.66, 392],
-    ];
-    let chordIndex = 0;
-    const playChord = () => {
-      const now = context.currentTime;
-      chords[chordIndex].forEach((frequency, noteIndex) => {
-        const oscillator = context.createOscillator(); const gain = context.createGain();
-        oscillator.type = noteIndex === 0 ? 'sine' : 'triangle'; oscillator.frequency.value = frequency / (noteIndex === 0 ? 2 : 1);
-        oscillator.detune.value = noteIndex % 2 ? 3 : -3;
-        gain.gain.setValueAtTime(.0001, now); gain.gain.exponentialRampToValueAtTime(noteIndex === 0 ? .16 : .065, now + .12); gain.gain.exponentialRampToValueAtTime(.0001, now + 2.05);
-        oscillator.connect(gain).connect(master); oscillator.start(now); oscillator.stop(now + 2.15);
-      });
-      const bell = context.createOscillator(); const bellGain = context.createGain();
-      bell.type = 'sine'; bell.frequency.value = chords[chordIndex][2] * 2;
-      bellGain.gain.setValueAtTime(.0001, now + .75); bellGain.gain.exponentialRampToValueAtTime(.035, now + .77); bellGain.gain.exponentialRampToValueAtTime(.0001, now + 1.25);
-      bell.connect(bellGain).connect(master); bell.start(now + .75); bell.stop(now + 1.3);
-      chordIndex = (chordIndex + 1) % chords.length;
+    const audio = new Audio();
+    audio.preload = 'none';
+    audioRef.current = audio;
+
+    const playNextTrack = () => {
+      failedTracks.current = 0;
+      trackIndex.current = (trackIndex.current + 1) % musicTracks.length;
+      play(true);
     };
-    void context.resume(); playChord();
-    const loop = window.setInterval(playChord, 2200);
-    return () => { window.clearInterval(loop); master.gain.setTargetAtTime(.0001, context.currentTime, .08); window.setTimeout(() => void context.close(), 350); };
-  }, [active]);
+    const handleTrackError = () => {
+      if (failedTracks.current >= musicTracks.length - 1) {
+        setMusicStatus('blocked');
+        return;
+      }
+      failedTracks.current += 1;
+      trackIndex.current = (trackIndex.current + 1) % musicTracks.length;
+      play(true);
+    };
+
+    audio.addEventListener('ended', playNextTrack);
+    audio.addEventListener('error', handleTrackError);
+    return () => {
+      audio.removeEventListener('ended', playNextTrack);
+      audio.removeEventListener('error', handleTrackError);
+      audio.pause();
+      audio.removeAttribute('src');
+      audio.load();
+      audioRef.current = null;
+    };
+  }, [play]);
+
+  return { currentTrack, musicStatus, pause, play, stop };
 }
 
 function MarketScene({ onPick, active }: { onPick: (word: Word) => void; active: boolean }) {
@@ -127,22 +163,30 @@ function MarketScene({ onPick, active }: { onPick: (word: Word) => void; active:
 function App() {
   const [round, setRound] = useState(0); const [score, setScore] = useState(0); const [streak, setStreak] = useState(0); const [started, setStarted] = useState(false); const [feedback, setFeedback] = useState<{ correct: boolean; message: string } | null>(null); const [muted, setMuted] = useState(false);
   const order = useRef([...words].sort(() => Math.random() - .5)); const target = order.current[round % words.length]; const finished = round >= words.length;
-  useElevatorMusic(started && !finished && !muted);
+  const { currentTrack, musicStatus, pause: pauseMusic, play: playMusic, stop: stopMusic } = useBackgroundMusic();
   const pick = useCallback((word: Word) => {
     if (!started || feedback?.correct || finished) return;
     if (word.english === target.english) { playSound(round === words.length - 1 ? 'complete' : 'correct', muted); setScore((s) => s + 100 + streak * 25); setStreak((s) => s + 1); setFeedback({ correct: true, message: `¡Muy bien! ${target.spanish} means ${target.english}.` }); }
     else { playSound('wrong', muted); setStreak(0); setFeedback({ correct: false, message: `${word.emoji} is ${word.english}. Look again for ${target.spanish}.` }); }
   }, [started, feedback, finished, streak, target, muted, round]);
   const next = () => { setFeedback(null); setRound((r) => r + 1); };
-  const restart = () => { order.current = [...words].sort(() => Math.random() - .5); setRound(0); setScore(0); setStreak(0); setFeedback(null); setStarted(true); };
-  return <main><header><a href="/" className="logo">Mercado <b>Quest</b></a><div className="header-tools"><div className="stats"><span>Score <b key={score} className="score-pop">{score}</b></span><span>Streak <b>×{streak}</b></span></div><button className="sound-toggle" onClick={() => setMuted((value) => !value)} aria-pressed={muted} aria-label={muted ? 'Turn sound on' : 'Mute sound'}>{muted ? 'Sound off' : 'Sound on'} <i>{muted ? '×' : '♪'}</i></button></div></header>
+  const start = () => { setStarted(true); if (!muted) playMusic(); };
+  const restart = () => { order.current = [...words].sort(() => Math.random() - .5); setRound(0); setScore(0); setStreak(0); setFeedback(null); setStarted(true); if (!muted) playMusic(); };
+  const toggleSound = () => {
+    const nextMuted = !muted;
+    setMuted(nextMuted);
+    if (nextMuted) pauseMusic();
+    else if (started && !finished) playMusic();
+  };
+  useEffect(() => { if (finished) stopMusic(); }, [finished, stopMusic]);
+  return <main><header><a href="/" className="logo">Mercado <b>Quest</b></a><div className="header-tools"><div className="stats"><span>Score <b key={score} className="score-pop">{score}</b></span><span>Streak <b>×{streak}</b></span></div><button className="sound-toggle" onClick={toggleSound} aria-pressed={muted} aria-label={muted ? 'Turn sound on' : 'Mute sound'}>{muted ? 'Sound off' : 'Sound on'} <i>{muted ? '×' : '♪'}</i></button></div></header>
     <section className="game"><MarketScene onPick={pick} active={started && !finished}/>
       {started && !finished && <div className="choice-bar" aria-label="Market choices">{words.map((w, index) => <button key={w.english} style={{ '--delay': `${index * 45}ms` } as React.CSSProperties} onClick={() => { playSound('select', muted); pick(w); }} disabled={feedback?.correct}><span>{w.emoji}</span><b>{feedback?.correct && w.english === target.english ? w.english : 'Choose'}</b></button>)}</div>}
-      {!started && <div className="card start"><p className="eyebrow">A tiny language adventure · ES → EN</p><h1>Learn English<br/>at the market.</h1><ol><li><span><b>Read</b> the Spanish shopping mission.</span></li><li><span><b>Choose</b> the matching market item.</span></li><li><span><b>Learn</b> its English name and build a streak.</span></li></ol><p className="round-note">5 words · about 1 minute · no timer</p><button onClick={() => setStarted(true)}>Start first mission →</button></div>}
+      {!started && <div className="card start"><p className="eyebrow">A tiny language adventure · ES → EN</p><h1>Learn English<br/>at the market.</h1><ol><li><span><b>Read</b> the Spanish shopping mission.</span></li><li><span><b>Choose</b> the matching market item.</span></li><li><span><b>Learn</b> its English name and build a streak.</span></li></ol><p className="round-note">5 words · about 1 minute · no timer</p><button onClick={start}>Start first mission →</button></div>}
       {started && !finished && <div className="mission" key={round}><div className="progress"><i style={{ width: `${((round + 1) / words.length) * 100}%` }}/></div><p>Shopping mission {round + 1} of {words.length}</p><small>Your list says</small><h2>{target.spanish}</h2><strong>Which item matches?</strong></div>}
       {feedback?.correct && <div className="card feedback correct"><div className="sparkles" aria-hidden="true">✦ <i>●</i> ✦ <i>●</i></div><span>✓</span><p className="eyebrow">New English word</p><h2>{target.emoji} {target.english}</h2><p><b>{target.spanish}</b> means <b>{target.english}</b>.</p><button onClick={next}>{round === words.length - 1 ? 'See my results →' : 'Next mission →'}</button></div>}
       {feedback && !feedback.correct && <div className="try-again" role="status"><span>Not quite</span><p>{feedback.message}</p><button onClick={() => setFeedback(null)}>Try again</button></div>}
       {finished && <div className="card finish"><p className="eyebrow">Market complete</p><h2>{score} points</h2><p>You matched {words.length} everyday market words. Play again to reinforce them in a new order.</p><button onClick={restart}>Play another round ↻</button></div>}
-    </section><footer><span>Tip</span><p>Tap a 3D object or its illustrated choice card. Wrong guesses do not end the mission.</p>{started && !finished && !muted && <small className="now-playing">♫ Market lounge</small>}</footer></main>;
+    </section><footer><span>Tip</span><p>Tap a 3D object or its illustrated choice card. Wrong guesses do not end the mission.</p>{started && !finished && !muted && currentTrack && <small className="now-playing">{musicStatus === 'blocked' ? 'Music unavailable' : `♫ ${currentTrack}`}</small>}<details className="music-credits"><summary>Music credits</summary><div><p><a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500078" target="_blank" rel="noreferrer">Suave Standpipe</a>, <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1700069" target="_blank" rel="noreferrer">Bossa Antigua</a>, and <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1600054" target="_blank" rel="noreferrer">Lobby Time</a> by Kevin MacLeod.</p><a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="license noreferrer">CC BY 4.0</a></div></details></footer></main>;
 }
 export default App;
